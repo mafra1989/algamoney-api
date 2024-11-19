@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
@@ -21,50 +20,43 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 
 	@Autowired
 	private AuthenticationManager authenticationManager;
-	
-	@Autowired
-	private PasswordEncoder passwordEncoder;
-	
+
 	@Autowired
 	private UserDetailsService userDetailsService;
-	
+
 	@Override
 	public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
 		clients.inMemory()
-			.withClient(passwordEncoder.encode("angular"))
-			.secret("@ngul@r0")
+			.withClient("angular")
+			.secret("$2a$10$H.lKkRdcwjU2U5g8qgG.s.o28wT7aLcBhim.Te2Zl1GlcE/JI3bWe")
 			.scopes("read", "write")
 			.authorizedGrantTypes("password", "refresh_token")
 			.accessTokenValiditySeconds(20)
 			.refreshTokenValiditySeconds(3600 * 24);
-		
 	}
 	
 	@Override
-	public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+	public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
 		endpoints
-			.tokenStore(tokenStore())
-			.accessTokenConverter(accessTokenConverter())
-			.reuseRefreshTokens(false)
-			.authenticationManager(authenticationManager)
-			.userDetailsService(userDetailsService);
+				.authenticationManager(authenticationManager)
+				.accessTokenConverter(accessTokenConverter())
+				.tokenStore(tokenStore())
+				.userDetailsService(userDetailsService)
+				.reuseRefreshTokens(false);
 	}
-	
+
 	@Bean
 	public JwtAccessTokenConverter accessTokenConverter() {
-		JwtAccessTokenConverter jwtAccessTokenConverter = new JwtAccessTokenConverter();
-		jwtAccessTokenConverter.setSigningKey("3032885ba9cd6621bcc4e7d6b6c35c2b");
-		return jwtAccessTokenConverter;
+		JwtAccessTokenConverter accessTokenConverter = new JwtAccessTokenConverter();
+
+		accessTokenConverter.setSigningKey("3032885ba9cd6621bcc4e7d6b6c35c2b");
+
+		return accessTokenConverter;
 	}
-	
+
+	@Bean
 	public TokenStore tokenStore() {
 		return new JwtTokenStore(accessTokenConverter());
 	}
-	
-	/*
-	@Override
-	public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
-		security.checkTokenAccess("permitAll()");
-	}
-	*/
+
 }
